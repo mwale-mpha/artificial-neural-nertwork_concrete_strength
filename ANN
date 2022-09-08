@@ -1,0 +1,43 @@
+#Artificial Neural Networks
+##Modeling the strength of concrete with ANNs
+
+concrete <- read.csv("concrete.csv") #loading the dataset
+str(concrete)
+
+normalize <- function(x) {
+  return((x - min(x)) / (max(x) - min(x)))
+} #creating a normalize function
+
+concrete_norm <- as.data.frame(lapply(concrete, normalize)) #normalizing every column of the dataset
+
+summary(concrete_norm$strength) #checking if the normalize function has worked
+summary(concrete$strength)
+
+concrete_train <- concrete_norm[1:773, ] #training data
+concrete_test <- concrete_norm[774:1030, ] #testing data
+
+## Training the model on the data
+install.packages("neuralnet")
+library(neuralnet)
+
+concrete_model <- neuralnet(strength ~ cement + slag +
+                              ash + water + superplastic +
+                              coarseagg + fineagg + age,
+                            data = concrete_train) #building the model
+plot(concrete_model) #visualizing the network topology
+
+## Evaluating model performance
+model_results <- compute(concrete_model, concrete_test[1:8])
+model_results
+predicted_strength <- model_results$net.result
+cor(predicted_strength, concrete_test$strength) #looking the association btwn the actual and predicted strength values
+
+## Improving model performance
+concrete_model2 <- neuralnet(strength ~ cement + slag +
+                               ash + water + superplastic +
+                               coarseagg + fineagg + age,
+                             data = concrete_train, hidden = 5)
+plot(concrete_model2)
+model_results2 <- compute(concrete_model2, concrete_test[1:8])
+predicted_strength2 <- model_results2$net.result
+cor(predicted_strength2, concrete_test$strength) #Now the performance has improved. Correlation increased from 08 to 0.9
